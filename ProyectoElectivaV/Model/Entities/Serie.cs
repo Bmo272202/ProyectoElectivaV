@@ -8,7 +8,7 @@ namespace ProyectoElectivaV.Model.Entities
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? id { get; set; }
+        public string id { get; set; }
 
         [BsonElement("Nombre"), BsonRequired]
         public string nombre { get; set; }
@@ -31,6 +31,10 @@ namespace ProyectoElectivaV.Model.Entities
         [BsonElement("visitas"), BsonRequired]
         public int visitas { get; set; }
 
-        public List<Reseña> reseñas { get; set; }
+        [BsonElement("puntuacion")]
+        public double? puntuacion { get; set; }
+
+        [BsonElement("reseñas")]
+        public List<Reseña> reseñas { get; set; } = new List<Reseña>();
     }
 }

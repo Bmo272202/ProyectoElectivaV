@@ -7,6 +7,5 @@
         public string email { get; set; }
         public string contraseña { get; set; }
         public string confirmarContraseña { get; set; }
-        public string token { get; set; }
     }
 }

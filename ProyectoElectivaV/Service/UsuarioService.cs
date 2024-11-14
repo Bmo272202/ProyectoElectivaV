@@ -17,17 +17,19 @@ namespace ProyectoElectivaV.Service
         private readonly IMapper _mapeos;
         private readonly IMongoCollection<Usuario> _usuarioCollection;
         private readonly ICorreoService _correoService;
+        private readonly UtilidadServicio _utilidadServicio;
 
         public UsuarioService(IMapper mapeos,
                             IProyectoElectivaVDBSettings proyectoElectivaVDBSettings,
-                            ICorreoService correoService)
+                            ICorreoService correoService,
+                            UtilidadServicio utilidadServicio)
         {
             _mapeos = mapeos;
             var cliente = new MongoClient(proyectoElectivaVDBSettings.ConnectionString);
             var database = cliente.GetDatabase(proyectoElectivaVDBSettings.DatabaseName);
             _usuarioCollection = database.GetCollection<Usuario>(proyectoElectivaVDBSettings.UsuariosCollectionname);
             _correoService = correoService;
-
+            _utilidadServicio = utilidadServicio;
         }
 
         public async Task<List<UsuarioDTO>> ObtenerTodosLosUsuarios()
@@ -80,18 +82,21 @@ namespace ProyectoElectivaV.Service
                 }
 
                 Usuario usuario = _mapeos.Map<CrearUsuarioDTO, Usuario>(dto);
-                usuario.contraseña = UtilidadServicio.ConvertirSHA246(dto.contraseña);
-                usuario.token = UtilidadServicio.GenerarToken();
+                usuario.contraseña = _utilidadServicio.ConvertirSHA246(dto.contraseña);
                 usuario.restablecer = false;
                 usuario.confirmado = false;
                 await _usuarioCollection.InsertOneAsync(usuario);
+
+                var filtro = Builders<Usuario>.Filter.Eq(u => u.id, usuario.id);
+                var actualizacion = Builders<Usuario>.Update.Set(u => u.token, usuario.token);
+                await _usuarioCollection.UpdateOneAsync(filtro, actualizacion);
 
                 var correoVerificacion = new CorreoDTO
                 {
                     Para = dto.email,
                     Asunto = "Verificación de Cuenta",
                     Contenido = $"<p>Por favor, verifica tu cuenta haciendo clic en el siguiente enlace:</p>" +
-                                $"<p><a href='https://localhost:44388/usuarioController/ConfirmarCorreo?token={usuario.token}'>Verificar Cuenta</a></p>"
+                                $"<p><a href='https://localhost:7198/usuarioController/ConfirmarCorreo?token={usuario.token}'>Verificar Cuenta</a></p>"
                 };
 
                 _correoService.EnviarEmail(correoVerificacion);
@@ -116,8 +121,8 @@ namespace ProyectoElectivaV.Service
                 }
 
                 var usuario = _mapeos.Map<Usuario, UsuarioDTO>(exist);
-                usuario.contraseña = UtilidadServicio.ConvertirSHA246(usuario.contraseña);
-                usuario.token = UtilidadServicio.GenerarToken();
+                usuario.contraseña = _utilidadServicio.ConvertirSHA246(usuario.contraseña);
+                usuario.token = _utilidadServicio.GenerarToken(exist);
 
                 return usuario;
             }
@@ -136,17 +141,17 @@ namespace ProyectoElectivaV.Service
 
                 if (exist is null)
                 {
-                    throw new CustomeExceptions("El usuario solicitado no existe", 203);
+                    throw new CustomeExceptions("El token es inválido o ha expirado", 403);
                 }
 
                 if (dto.contraseña != dto.confirmarContraseña)
                 {
-                    throw new CustomeExceptions("Las contraseñas no coinciden", 203);
+                    throw new CustomeExceptions("Las contraseñas no coinciden", 400);
                 }
 
                 exist.restablecer = true;
-                exist.contraseña = UtilidadServicio.ConvertirSHA246(dto.contraseña);
-                exist.token = UtilidadServicio.GenerarToken();
+                exist.contraseña = _utilidadServicio.ConvertirSHA246(dto.contraseña);
+                exist.token = _utilidadServicio.GenerarToken(exist);
                 await _usuarioCollection.ReplaceOneAsync(s => s.token == dto.token, exist);
 
                 return _mapeos.Map<UsuarioDTO>(exist);
@@ -157,53 +162,32 @@ namespace ProyectoElectivaV.Service
             }
         }
 
-        public async Task<object> EliminarUsuario(string idUsuario)
-        {
-            try
-            {
-                Usuario exist = await _usuarioCollection.Find(s => s.id == idUsuario).FirstOrDefaultAsync();
-
-                if (exist is null)
-                {
-                    throw new CustomeExceptions("El usuario solicitado no existe", 203);
-                }
-
-                await _usuarioCollection.DeleteOneAsync(s => s.id == idUsuario);
-
-                return "Registro eliminado con exito";
-            }
-            catch (Exception)
-            {
-
-                throw;
-            }
-        }
-
         public async Task<UsuarioDTO> LoginUsuario(LoginDTO dto)
         {
             try
             {
                 Usuario exist = await _usuarioCollection.Find(s => s.email == dto.email &&
-                                                                   s.contraseña == UtilidadServicio.ConvertirSHA246(dto.contraseña)).FirstOrDefaultAsync();
+                                                                   s.contraseña == _utilidadServicio.ConvertirSHA246(dto.contraseña)).FirstOrDefaultAsync();
                 
                 if (exist is null)
                 {
                     throw new CustomeExceptions("Estas credenciales, no están asociadas a una cuenta", 203);
                 }
-                else if (exist.confirmado == false)
-                {
-                    throw new CustomeExceptions("No ha confirmado su cuenta", 203);
-                }
-                else if (exist.email != dto.email && exist.contraseña == dto.contraseña)
+                //else if (exist.confirmado == false)
+                //{
+                //    throw new CustomeExceptions("No ha confirmado su cuenta", 203);
+                //}
+                else if (exist.email != dto.email && exist.contraseña == _utilidadServicio.ConvertirSHA246(dto.contraseña))
                 {
                     throw new CustomeExceptions("Correo o contraseña incorrectas", 203);
                 }
-                else if (exist.email == dto.email && exist.contraseña != dto.contraseña)
+                else if (exist.email == dto.email && exist.contraseña != _utilidadServicio.ConvertirSHA246(dto.contraseña))
                 {
                     throw new CustomeExceptions("Correo o contraseña incorrectas", 203);
                 }
 
                 var usuario = _mapeos.Map<Usuario, UsuarioDTO>(exist);
+                usuario.token = _utilidadServicio.GenerarToken(exist);
 
                 return usuario;
             }

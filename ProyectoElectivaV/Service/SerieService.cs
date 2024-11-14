@@ -49,6 +49,7 @@ namespace ProyectoElectivaV.Service
             try
             {
                 var serie = _mapeos.Map<CrearSerieDTO, Serie>(dto);
+                serie.reseñas = new List<Reseña>();
                 await _serieCollection.InsertOneAsync(serie);
 
                 return _mapeos.Map<SerieDTO>(serie);

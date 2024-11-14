@@ -7,15 +7,14 @@ namespace ProyectoElectivaV.Model.Entities
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string id { get; set; }
+        public ObjectId id { get; set; }
 
         [BsonElement("ID_serie"), BsonRequired]
         [BsonRepresentation(BsonType.ObjectId)]
         public string idSerie { get; set; }
 
-        [BsonElement("ID_usuario"), BsonRequired]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string idUsuario { get; set; }
+        [BsonElement("userEmail"), BsonRequired]
+        public string userEmail { get; set; }
 
         [BsonElement("Fecha_Creacion"), BsonRequired]
         public DateTime fechaCreacion { get; set; }
@@ -46,5 +45,11 @@ namespace ProyectoElectivaV.Model.Entities
 
         [BsonElement("Usuario_creacion"), BsonRequired]
         public string usuarioCreacion { get; set; }
+
+        [BsonElement("MeGustaEmails")]
+        public List<string> MeGustaEmails { get; set; } = new List<string>();
+
+        [BsonElement("MeDisgustaEmails")]
+        public List<string> MeDisgustaEmails { get; set; } = new List<string>();
     }
 }
