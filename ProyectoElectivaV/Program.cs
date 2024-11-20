@@ -57,7 +57,6 @@ var mapperConfig = new MapperConfiguration(m =>
 
 IMapper mapper = mapperConfig.CreateMapper();
 builder.Services.AddSingleton(mapper);
-builder.Services.AddMvc();
 
 
 var app = builder.Build();
