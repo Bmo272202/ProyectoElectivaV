@@ -21,7 +21,7 @@ builder.Services.AddSingleton<IProyectoElectivaVDBSettings>
 builder.Services.AddSingleton<SerieService>();
 builder.Services.AddSingleton<UsuarioService>();
 builder.Services.AddSingleton<UtilidadServicio>();
-builder.Services.AddSingleton<ReseñaService>();
+builder.Services.AddSingleton<ReseniaService>();
 builder.Services.AddSingleton<ICorreoService,CorreoService>();
 
 builder.Services.AddAuthentication(config =>

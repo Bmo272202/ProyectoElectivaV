@@ -9,12 +9,12 @@ using ProyectoElectivaV.Model.Entities;
 
 namespace ProyectoElectivaV.Service
 {
-    public class ReseñaService
+    public class ReseniaService
     {
         private readonly IMapper _mapeos;
         private readonly IMongoCollection<Serie> _serieCollection;
 
-        public ReseñaService(IMapper mapeos,
+        public ReseniaService(IMapper mapeos,
                             IProyectoElectivaVDBSettings proyectoElectivaVDBSettings)
         {
             _mapeos = mapeos;

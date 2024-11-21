@@ -15,9 +15,9 @@ namespace ProyectoElectivaV.Controllers
     [ApiController]
     public class ReseñasController : ControllerBase
     {
-        private readonly ReseñaService _reseñaService;
+        private readonly ReseniaService _reseñaService;
 
-        public ReseñasController(ReseñaService reseñaService)
+        public ReseñasController(ReseniaService reseñaService)
         {
             _reseñaService = reseñaService;
         }
